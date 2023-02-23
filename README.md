@@ -5,10 +5,14 @@ Author: Matt MacLeod
 Last Updated: 2023/02/22, working api for configurable sensor drivers
 
 ********
-
 ## Overview
 ********
 The following project is inteded to decode the Nissan Leaf BMS CAN bus messages inorder to get an idea of the condition of the battery packs. In addtion to being a plug in to monitor the condition of the packs remotley using Aretas Software as they degrade. 
+
+Notes:
+- The middleware needs to read the serial output so a change was introduced to map debugging output to Serial1: ``HardwareSerial *serDebug = &Serial1;`` and ``HardwareSerial *serOutput = &Serial;`` 
+- If you do not have an FTDI adapter connected to Serial1 AND you need debugging output, change serDebug back to Serial. However, the middleware will probably not function correctly. 
+
 
 ********
 ## What about active CAN-polling?
@@ -37,4 +41,3 @@ Actively asking the different control units for info is another thing. The datab
 |      AVM      |     0x7B7     |               |
 
 List on ZE1 (2018+) CAN polling: https://drive.google.com/file/d/1jH9cgm5v23qnqVnmZN3p4TvdaokWKPjM/view
-
