@@ -80,7 +80,7 @@
  */
  enum EVBatterySensorTypes{ 
 
-    SYS_IDLE =    0x200,    //512 decimal (idle statue command)
+    SYS_NO_REQUEST =    0x200,    //512 decimal (idle statue command)
     EV_BAT_HX =   0x201,    //513 decimal (high voltage battery's health)
     EV_BAT_SOC =  0x202,    //514 decimal (state of charge of the HV battery)
     EV_BAT_AHR =  0x203,    //515 decimal (Capacity of HV battery (how much energy the battery [sic] could hold when fully charged)
