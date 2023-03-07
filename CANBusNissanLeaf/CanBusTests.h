@@ -2,42 +2,42 @@
 #define NISSAN_LEAF_TESTS_H
 #include "SensorTypes.h"
 
+// #define DEBUG_MODE // un-comment to enter debug mode to access test cases 
+
+#if defined(DEBUG_MODE)
+
+  //un-comment what ever group you wish to test OR send in
+  // #define TEST_GROUP1  //test retrieving sensing paramters from the wire that belong to group1 (hx,soc,ahr)
+  // #define TEST_GROUP2  //test retrieving sensing paramters from the wire that belong to group2 (cell voltages)
+  #define TEST_GROUP4  //test retrieving sensing paramters from the wire that belong to group4 (temperatures)
+  // #define TEST_GROUP6  //test retrieving sensing paramters from the wire that belong to group6 (shunts)
+  // #define TEST_GROUP61  //test retrieving sensing paramters from the wire that belong to group61 (soh)
+  // #define TEST_GROUP_ALL     //test retriieving all sensing parameters from BSM 
 
 
-//un-comment what ever group you wish to test OR send in
-// #define TEST_GROUP1  //test retrieving sensing paramters from the wire that belong to group1
-//#define TEST_GROUP2  //test retrieving sensing paramters from the wire that belong to group2
-#define TEST_GROUP4  //test retrieving sensing paramters from the wire that belong to group4
-//#define TEST_GROUP6  //test retrieving sensing paramters from the wire that belong to group6
-// #define TEST_GROUP61  //test retrieving sensing paramters from the wire that belong to group61
-// #define TEST_GROUP_ALL     //test retriieving all sensing paramters from BSM 
+  //macro defined test cases 
+  #if defined(TEST_GROUP1)
+    #define SENSE_GROUP &sense_group1 ;
+  #endif 
+  #if defined(TEST_GROUP2)
+    #define SENSE_GROUP &sense_group2
+  #endif 
+  #if defined(TEST_GROUP4)
+    #define SENSE_GROUP &sense_group4 
+  #endif 
+  #if defined(TEST_GROUP6)
+    #define SENSE_GROUP &sense_group6 
+  #endif 
+  #if defined(TEST_GROUP61)
+    #define SENSE_GROUP &sense_group61
+  #endif 
 
 
-//macro defined test cases 
-#if defined(TEST_GROUP1)
-  #define SENSE_GROUP &sense_group1 ;
-#endif 
-#if defined(TEST_GROUP2)
-  #define SENSE_GROUP &sense_group2
-#endif 
-#if defined(TEST_GROUP4)
-  #define SENSE_GROUP &sense_group4 
-#endif 
-#if defined(TEST_GROUP6)
-  #define SENSE_GROUP &sense_group6 
-#endif 
-#if defined(TEST_GROUP61)
-  #define SENSE_GROUP &sense_group61
-#endif 
-#if defined(TEST_GROUP_ALL) 
-  #define GROUP_SIZE (5) 
-  #define GET_SENSOR_GROUP_IDX(idx) (idx + 1 < GROUP_SIZE ? idx + 1: 0)  	
-#endif 
+#else // cant have debug mode and serial command mode both enabled 
 
+  #define SERIAL_COMMAND_MODE  //recieve sense group from issuing serial command 
 
-
-
-
+#endif // defined(DEBUG_MODE)
 
 
 #endif //#ifndef NISSAN_LEAF_TESTS_H
