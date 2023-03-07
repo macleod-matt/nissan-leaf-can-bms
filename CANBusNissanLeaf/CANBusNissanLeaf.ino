@@ -44,14 +44,23 @@
 #endif //!Defined(SERIAL_COMMAND_MODE)
 
 #if defined(TEST_GROUP_ALL) || defined(SERIAL_COMMAND_MODE)
-  int SerialSensorRequest = SYS_NO_REQUEST ; 
   #define GROUP_SIZE (5) 
   #define GET_SENSOR_GROUP_IDX(idx) (idx + 1 < GROUP_SIZE ? idx + 1: 0)  	
+  group_info_t * sensor_groups[GROUP_SIZE] = {&sense_group1,&sense_group2, &sense_group4,&sense_group6,&sense_group61};
+  //helper macro to iterate sensor groups
+  #define GET_SENSOR_GROUP(index,psensor_group ) \
+  do { \
+    psensor_group = sensor_groups[index];\
+    index=GET_SENSOR_GROUP_IDX(index); \ 
+  } while (0)
+
+  int SerialSensorRequest = SYS_NO_REQUEST ; 
+  
+
 #endif //defined(TEST_GROUP_ALL) || defined(SERIAL_COMMAND_MODE)
 
 
 #if defined(TEST_GROUP_ALL) || defined(SERIAL_COMMAND_MODE)
-  group_info_t * sensor_groups[5] = {&sense_group1,&sense_group2, &sense_group4,&sense_group6,&sense_group61};
 #endif 
 
 
@@ -136,7 +145,7 @@ void send_cell_voltages(int sensor_request){
 void send_shunt_status(int sensor_request){ 
     group6_data_t * data = (group6_data_t *)sense_group6.data; 
     
-    for(int i = 0; i < 96; i++) { // Display Cell Voltage and Shunts
+    for(int i = 0; i < NUM_CELLS; i++) { // Display Cell Voltage and Shunts
       serDebug->print("shunt ");
       serDebug->print(i);
       serDebug->print(" ");
@@ -153,7 +162,7 @@ void send_pack_temperatures(int sensor_request){
   
   group4_data_t * data = (group4_data_t *)sense_group4.data; 
 
-  for(int i = 0; i < 4; i++) {  // Display Temps
+  for(int i = 0; i < NUM_TEMP_SENSORS; i++) {  // Display Temps
       
       serDebug->print("Temp ");
       serDebug->print(i);
@@ -172,28 +181,31 @@ void send_pack_temperatures(int sensor_request){
  */
 void decode_cell_voltages() {
   
-  static int cell_count = -1; 
+  static int cellCount = -1; 
   static group2_data_t *data = (group2_data_t *)sense_group2.data; //cast as group 2 data 
+  static uint8_t prevCellVoltage = 0; 
 
   int dataType = (buf[0] %2); // Two sets of data, one with split cell at the end and one at the start
+
   if (buf[0] == 0x10 && buf[3] == 0x02) { // First Line
-    BYTES_TO_CELL_VOLTGAGE(buf[4],buf[5], cell_count, data);
-    BYTES_TO_CELL_VOLTGAGE(buf[6],buf[7], cell_count, data);
+    BYTES_TO_CELL_VOLTGAGE(buf[4],buf[5], cellCount, data->cell_voltages);
+    BYTES_TO_CELL_VOLTGAGE(buf[6],buf[7], cellCount, data->cell_voltages);
     
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (dataType == 1) {
-    BYTES_TO_CELL_VOLTGAGE(buf[1],buf[2], cell_count, data);
-    BYTES_TO_CELL_VOLTGAGE(buf[3],buf[4], cell_count, data);
-    BYTES_TO_CELL_VOLTGAGE(buf[5],buf[6], cell_count, data);
+    BYTES_TO_CELL_VOLTGAGE(buf[1],buf[2], cellCount, data->cell_voltages);
+    BYTES_TO_CELL_VOLTGAGE(buf[3],buf[4], cellCount, data->cell_voltages);
+    BYTES_TO_CELL_VOLTGAGE(buf[5],buf[6], cellCount, data->cell_voltages);  
+    prevCellVoltage = buf[7]; 
 
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (dataType == 0) {
-    BYTES_TO_CELL_VOLTGAGE(buf[7],buf[1], cell_count, data);
-    BYTES_TO_CELL_VOLTGAGE(buf[2],buf[3], cell_count, data);
-    BYTES_TO_CELL_VOLTGAGE(buf[4],buf[5], cell_count, data);
-    BYTES_TO_CELL_VOLTGAGE(buf[6],buf[7], cell_count, data);
+    BYTES_TO_CELL_VOLTGAGE(prevCellVoltage,buf[1], cellCount, data->cell_voltages);
+    BYTES_TO_CELL_VOLTGAGE(buf[2],buf[3], cellCount, data->cell_voltages);
+    BYTES_TO_CELL_VOLTGAGE(buf[4],buf[5], cellCount, data->cell_voltages);
+    BYTES_TO_CELL_VOLTGAGE(buf[6],buf[7], cellCount, data->cell_voltages);
 
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   }
 
 }
@@ -207,11 +219,11 @@ void decode_temperature() {
   group4_data_t * data = ( group4_data_t *)sense_group4.data; 
   if (buf[0] == 0x10 && buf[3] == 0x04) { // First Line
     data->pack_temps[0] = buf[6]; 
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (buf[0] == 0x21) { // Second Line
     data->pack_temps[1] = buf[2]; 
     data->pack_temps[2] = buf[5]; 
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (buf[0] == 0x22) { // Third Line
     data->pack_temps[3] = buf[1]; 
 
@@ -233,17 +245,17 @@ void decode_shunts() {
   if (buf[0] == 0x10 && buf[3] == 0x06) { // First Line
     shunt_index = 0;
     for(int i = 4; i < 8; i++) {
-      BYTES_TO_SHUNT_VAL(buf[i], shunt_index, data);
+      BYTES_TO_SHUNT_VAL(buf[i], shunt_index, data->shunts);
     }
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (buf[0] == 0x21 || buf[0] == 0x22) {
     for(int i = 0; i < 8; i++) {
-      BYTES_TO_SHUNT_VAL(buf[i],shunt_index,data);
+      BYTES_TO_SHUNT_VAL(buf[i],shunt_index,data->shunts);
     }
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (buf[0] == 0x23) {
     for(int i = 0; i < 4; i++) {
-      BYTES_TO_SHUNT_VAL(buf[i],shunt_index, data);
+      BYTES_TO_SHUNT_VAL(buf[i],shunt_index, data->shunts);
     }
   }
 
@@ -266,23 +278,23 @@ void decode_group1_info() {
   if (buf[0] == 0x10 && buf[3] == 0x01) { // First Line
     hv1_current = (buf[4] << 24) | (buf[5] << 16 | ((buf[6] << 8) | buf[7])); 
     data->hv_bat_curr1 = CHECK_CURRENT(hv1_current);
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   
   } else if (buf[0] == 0x21) {
     
     hv2_current = (buf[4] << 24) | (buf[5] << 16 | ((buf[6] << 8) | buf[7])); 
     data->hv_bat_curr2 = CHECK_CURRENT(hv2_current);
    
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (buf[0] == 0x22) {
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (buf[0] == 0x23) {
     //data-> = ((float)(buf[3] * 256) + buf[4]) / 1024;
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (buf[0] == 0x24) {
     data->hx = (float)((buf[4] << 8) | buf[5] ) / 102.4; //hx formula according to nissan 2018 doc 
     SOC_HB = buf[7]; // get the highbyte from the formula      
-    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+    CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (buf[0] == 0x25) {
     SOC_LB = (buf[1] << 8 | buf[2]); 
     data->soc = (float)(SOC_HB << 16 | SOC_LB ) / 10000; 
@@ -323,7 +335,7 @@ void decode_soh(){
   
   if (buf[0] == 0x11 && buf[2] == 0x61) { // First Line
       data->soh = (float)(((buf[6] << 8) | buf[7]) /100.0);
-      CAN0.sendMsgBuf(BMS_QUERY_ID, 0, sizeof(sendNextLine), sendNextLine);
+      CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   }
 }
 
@@ -502,7 +514,8 @@ void setup() {
 #if defined(SERIAL_COMMAND_MODE)
 
 void get_sensor_group_from_serial(){ 
-
+  
+  static int groupIndex = 0; 
   String serialRecStr; 
  //get sensor_request from Serial port 
   //we will use the serial.readString function because it will make life easier to recieve commands from the serial port if we search for a terminating character 
@@ -515,8 +528,7 @@ void get_sensor_group_from_serial(){
   }
 
   if(SerialSensorRequest == REQUEST_ALL ){ 
-    sensor_group_idx = GET_SENSOR_GROUP_IDX(sensor_group_idx); //get sensor index in between iterations 
-    p_group_info_request = sensor_groups[sensor_group_idx]; // get corresponding group 
+    GET_SENSOR_GROUP(groupIndex,p_group_info_request); 
   }else if( SYS_NO_REQUEST  < SerialSensorRequest && SerialSensorRequest < EV_BAT_CELL_VOLTAGES){ 
     p_group_info_request = &sense_group1;
     return;
@@ -547,13 +559,13 @@ void loop() {
   static bool request_recv_flag = false; //flag to indicate group reequest recieved  
   static unsigned long CanMsgID = 0; 
   static int SensorRequest = SYS_NO_REQUEST ; 
-  
+
   #if defined(SERIAL_COMMAND_MODE)
     get_sensor_group_from_serial(); 
     SensorRequest = SerialSensorRequest;
   #elif defined(TEST_GROUP_ALL)
-    sensor_group_idx = GET_SENSOR_GROUP_IDX(sensor_group_idx); //get sensor index in between iterations 
-    p_group_info_request = sensor_groups[sensor_group_idx]; // get corresponding group 
+    static int groupIndex = 0; 
+    GET_SENSOR_GROUP(groupIndex,p_group_info_request); 
     sensor_request = REQUEST_ALL; 
   #elif !defined(TEST_GROUP_ALL) && !defined(SERIAL_COMMAND_MODE)
     SensorRequest = REQUEST_ALL; 

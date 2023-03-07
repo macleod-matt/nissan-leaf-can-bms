@@ -10,6 +10,7 @@
 #define LED2 8
 #define LED3 7
 #define NUM_CELLS 96
+#define NUM_TEMP_SENSORS 4
 #define GET_CELL_INDEX(index) (index < NUM_CELLS ? index + 1 : 0 )
 #define GET_SHUNT_INDEX(index) (index < NUM_CELLS ? index + 4 : 0 )
 #define CONVERT_BYTES(high_b, low_b) ((high_b << 8 | low_b)/1000.0)
@@ -27,7 +28,7 @@
 #define BYTES_TO_CELL_VOLTGAGE(high,low,index, dest) \
 do { \
   index=GET_CELL_INDEX(index); \ 
-  dest->cell_voltages[index]=(float)CONVERT_BYTES(high,low);\ 
+  dest[index]=(float)CONVERT_BYTES(high,low);\ 
 } while (0)
 
 /**
@@ -39,12 +40,14 @@ do { \
  */
 #define BYTES_TO_SHUNT_VAL(byte, index, dest) \
 do { \
-  dest->shunts[index] = byte && 00001000;\
-  dest->shunts[index] = byte && 00000100;\
-  dest->shunts[index] = byte && 00000010;\
-  dest->shunts[index] = byte && 00000001;\
+  dest[index] = byte && 00001000;\
+  dest[index] = byte && 00000100;\
+  dest[index] = byte && 00000010;\
+  dest[index] = byte && 00000001;\
   index=GET_SHUNT_INDEX(index); \ 
 } while (0)
+
+
 
 
 MCP_CAN CAN0(9); // Set CS to pin 9 for rp2040 
@@ -122,10 +125,6 @@ group_info_t sense_group4;
 group_info_t sense_group6;
 group_info_t sense_group61;
 
-
-group_info_t *  p_group_info_request; 
-
-
-
+group_info_t *  p_group_info_request;
 
 #endif //#ndef CAN_BUS_NISSAN_LEAF_H
