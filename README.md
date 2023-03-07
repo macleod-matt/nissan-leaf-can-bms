@@ -1,43 +1,67 @@
-# Nissan Leaf  BMS Decoder using RP2040 Processor  
+# Nissan Leaf  Can-Bus to Serial Decoder using RP2040 Processor  
 
 Author: Matt MacLeod
 
-Last Updated: 2023/02/22, working api for configurable sensor drivers
+Last Updated: 2023/03/07, working serial commands 
 
 ********
-## Overview
+## Description
 ********
-The following project is inteded to decode the Nissan Leaf BMS CAN bus messages inorder to get an idea of the condition of the battery packs. In addtion to being a plug in to monitor the condition of the packs remotley using Aretas Software as they degrade. 
+The following firmware is designed be a cheap interface enabling IoT edge devices to interpret the decoded can bus data from a Nissan Leaf BMS over serial. 
+
+The goal of developing this interface was to allow developers an easy way to query the senors on the BMS so that they can be remotley monitored by issuing one of the following [commands](https://github.com/macleod-matt/nissan-leaf-can-bms/blob/testing-can/libraries/SensorTypes/SensorTypes.h#L81-L100)
+
+The Serial commands for this interface was inteded to be a plug-in for an IoT sensing module compatible with the [Aretas Iot Cloud Suite](https://www2.aretas.ca/aretas-cloud/)
+
+For simplity firmware was developed on the[Longan Labs Canbed 2040](https://docs.longan-labs.cc/1030018/) and the cloud persitance was done with a raspberry pi zero W. 
+
 
 Notes:
 - The middleware needs to read the serial output so a change was introduced to map debugging output to Serial1: ``HardwareSerial *serDebug = &Serial1;`` and ``HardwareSerial *serOutput = &Serial;`` 
 - If you do not have an FTDI adapter connected to Serial1 AND you need debugging output, change serDebug back to Serial. However, the middleware will probably not function correctly. 
-
+- The sensor values have been decoded using the following document as a [reference](https://drive.google.com/file/d/1jH9cgm5v23qnqVnmZN3p4TvdaokWKPjM/view) 
 
 ********
-## What about active CAN-polling?
+## Requirments
 ********
-Actively asking the different control units for info is another thing. The database files here won't help you (those are for passive listening), but here is a list of the different control units query and response IDs. Please note that the availability of the control modules varies depending on model year (Only ZE0 has 'Shift' module for instance)
+1. CanBed 2040 board [available](https://www.mouser.ca/new/seeed-studio/seeed-canbed-arduino-development-board/)
+2. raspberry pi zero w 
+3. Aretas [Can bus Middleware](https://github.com/ElDuderino/CANBusMiddleware)
+4. Nissan Leaf 
+5. USB C Cable 
+6. Arduino IDE 
 
-| Control Unit  |    ID Query   |  ID Response  |
-| ------------- | ------------- | ------------- |
-|   Consult3+   |     0x7D2     |               |
-|      VCM      |     0x797     |     0x79A     |
-|      BCM      |     0x745     |     0x765     |
-|      ABS      |     0x740     |     0x760     |
-|   LBC(BMS)    |     0x79B     |     0x7BB     |
-|  INVERTER/MC  |     0x784     |     0x78C     |
-|  M&A (Meter)  |     0x743     |     0x763     |
-|     HVAC      |     0x744     |     0x764     |
-|     BRAKE     |     0x70E     |               |
-|      VSP      |     0x73F     |     0x761     |
-|      EPS      |     0x742     |               |
-|      TCU      |     0x746     |               |
-|   Multi AV    |     0x747     |               |
-|   IPDM E/R    |     0x74D     |               |
-|    AIRBAG     |     0x752     |               |
-|    CHARGER    |     0x792     |     0x793     |
-|     SHIFT     |     0x79D     |     0x7BD     |
-|      AVM      |     0x7B7     |               |
+********
+## Deployment
+********
 
-List on ZE1 (2018+) CAN polling: https://drive.google.com/file/d/1jH9cgm5v23qnqVnmZN3p4TvdaokWKPjM/view
+### **Firmware** 
+
+1. clone repo 
+2. open sketch in arduino IDE 
+3. File->Preferences. Change sketch location to the location of the cloned repo  
+4. Follow the Longan Labs instructions for setting up the board to a can bus devuice
+5. Upload Sketch to the canbed board 
+6. Connect the  CAN_H, CAN_L lines of the BMS to the canbed board 
+7. Open a seral port monitor (either through the Arduino IDE or a third party program like teraterm)
+8. Enter a [command](https://github.com/macleod-matt/nissan-leaf-can-bms/blob/testing-can/libraries/SensorTypes/SensorTypes.h#L81-L100) to querry one of the sensors: 
+
+    e.g Entering "519"into the serial port allows us to querry the cell voltages: 
+    ![](images/voltages.PNG)
+    e.g Entering "520"into the serial port allows us to querry the temperatures: 
+        ![](images/temps.PNG)
+
+
+A framework for a raspberry pi has been developed around this to interface with the Aretas IoT Cloud Ecosystem using a raspberry pi zero w as an edge device [see link to middleware](https://github.com/ElDuderino/CANBusMiddleware)
+
+********
+## Testing
+********
+
+The firmware was developed on a 2011 nissan Leaf Battery Pack. There may be unknown differences between that model and yours. So use at your own risk.   
+
+The firmware has a few tests cases that allow the developer to extract the sensor data from the BMS without the need to manually input the serial commands by changing the following macros in [CanBusTesting.h](https://drive.google.com/file/d/1jH9cgm5v23qnqVnmZN3p4TvdaokWKPjM/view):
+
+
+
+
