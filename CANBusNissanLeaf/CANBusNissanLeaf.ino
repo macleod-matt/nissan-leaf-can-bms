@@ -532,12 +532,12 @@ void get_sensor_group_from_serial(){
     p_group_info_request = &sense_group61;
     return; 
   }
-  //if we get here, there is an invalid request being sent from the user 
-  if(SerialSensorRequest != SYS_NO_REQUEST )
+  //if we get here, there is an invalid request being sent from the user. We dont care if the user imputs a sys no request 
+  if(SerialSensorRequest != SYS_NO_REQUEST ){
     serDebug->print("Invalid sensor request recieved over serial "); 
     serDebug->println(SerialSensorRequest, HEX); 
   }
-
+}
 #endif //defined(SERIAL_COMMAND_MODE)
 
 
@@ -547,6 +547,7 @@ void loop() {
   static bool request_recv_flag = false; //flag to indicate group reequest recieved  
   static unsigned long CanMsgID = 0; 
   static int SensorRequest = SYS_NO_REQUEST ; 
+  
   #if defined(SERIAL_COMMAND_MODE)
     get_sensor_group_from_serial(); 
     SensorRequest = SerialSensorRequest;
