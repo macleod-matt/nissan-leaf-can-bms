@@ -4,9 +4,8 @@ Author: Matt MacLeod
 
 Last Updated: 2023/03/07, working serial commands 
 
-********
 ## Description
-********
+
 The following firmware is designed be a cheap interface enabling IoT edge devices to interpret the decoded can bus data from a Nissan Leaf BMS over serial. 
 
 The goal of developing this interface was to allow developers an easy way to query the senors on the BMS so that they can be remotley monitored by issuing one of the following [commands](https://github.com/macleod-matt/nissan-leaf-can-bms/blob/testing-can/libraries/SensorTypes/SensorTypes.h#L81-L100)
@@ -21,9 +20,9 @@ Notes:
 - If you do not have an FTDI adapter connected to Serial1 AND you need debugging output, change serDebug back to Serial. However, the middleware will probably not function correctly. 
 - The sensor values have been decoded using the following document as a [reference](https://drive.google.com/file/d/1jH9cgm5v23qnqVnmZN3p4TvdaokWKPjM/view) 
 
-********
+
 ## Requirments
-********
+
 1. CanBed 2040 board [available](https://www.mouser.ca/new/seeed-studio/seeed-canbed-arduino-development-board/)
 2. raspberry pi zero w 
 3. Aretas [Can bus Middleware](https://github.com/ElDuderino/CANBusMiddleware)
@@ -31,9 +30,7 @@ Notes:
 5. USB C Cable 
 6. Arduino IDE 
 
-********
 ## Deployment
-********
 
 ### **Firmware** 
 
@@ -54,9 +51,7 @@ Notes:
 
 A framework for a raspberry pi has been developed around this to interface with the Aretas IoT Cloud Ecosystem using a raspberry pi zero w as an edge device [see link to middleware](https://github.com/ElDuderino/CANBusMiddleware)
 
-********
 ## Testing
-********
 
 The firmware was developed on a 2011 nissan Leaf Battery Pack. There may be unknown differences between that model and yours. So use at your own risk.   
 
