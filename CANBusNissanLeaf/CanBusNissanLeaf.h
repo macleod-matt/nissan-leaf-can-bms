@@ -97,8 +97,8 @@ typedef struct _group61_data_{
  float soh; 
 }group61_data_t; 
 
-HardwareSerial *serDebug = &Serial;
-HardwareSerial *serOutput = &Serial1;
+HardwareSerial *serDebug = &Serial1;
+HardwareSerial *serOutput = &Serial;
 
 
 // generic structure for each state

@@ -60,10 +60,6 @@
 #endif //defined(TEST_GROUP_ALL) || defined(SERIAL_COMMAND_MODE)
 
 
-#if defined(TEST_GROUP_ALL) || defined(SERIAL_COMMAND_MODE)
-#endif 
-
-
 /**
  * @brief send out group1 info 
  * 
@@ -289,7 +285,6 @@ void decode_group1_info() {
   } else if (buf[0] == 0x22) {
     CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (buf[0] == 0x23) {
-    //data-> = ((float)(buf[3] * 256) + buf[4]) / 1024;
     CAN0.sendMsgBuf(BMS_QUERY_ID, 0, GROUP_REQEST_SIZE, sendNextLine);
   } else if (buf[0] == 0x24) {
     data->hx = (float)((buf[4] << 8) | buf[5] ) / 102.4; //hx formula according to nissan 2018 doc 
