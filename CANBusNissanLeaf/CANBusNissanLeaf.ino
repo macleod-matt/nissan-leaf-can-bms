@@ -437,7 +437,7 @@ void setup() {
   serDebug->begin(115200);
   serOutput->begin(115200);
 
-  while(!serDebug); 
+  while(!serOutput); 
 
   pinMode(23, OUTPUT);
   digitalWrite(23, HIGH);
@@ -514,10 +514,10 @@ void get_sensor_group_from_serial(){
   String serialRecStr; 
  //get sensor_request from Serial port 
   //we will use the serial.readString function because it will make life easier to recieve commands from the serial port if we search for a terminating character 
-  if(serDebug->available() > 0)
+  if(serOutput->available() > 0)
   {
     // SerialSensorRequest = serDebug->read();
-    serialRecStr = Serial.readString();  //read until timeout
+    serialRecStr = serOutput->readString();  //read until timeout
     serialRecStr.trim();                        // remove any \r \n whitespace at the end of the String
     SerialSensorRequest = serialRecStr.toInt(); //convert string to int 
   }
