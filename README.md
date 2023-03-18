@@ -16,7 +16,12 @@ For simplity firmware was developed on the[Longan Labs Canbed 2040](https://docs
 
 
 Notes:
-- The middleware needs to read the serial output so a change was introduced to map debugging output to Serial1: ``HardwareSerial *serDebug = &Serial1;`` and ``HardwareSerial *serOutput = &Serial;`` 
+- The middleware needs to read the serial output so a change was introduced to map debugging output to Serial1: 
+
+```
+HardwareSerial *serDebug = &Serial1;
+HardwareSerial *serOutput = &Serial;
+``` 
 - If you do not have an FTDI adapter connected to Serial1 AND you need debugging output, change serDebug back to Serial. However, the middleware will probably not function correctly. 
 - The sensor values have been decoded using the following document as a [reference](https://drive.google.com/file/d/1jH9cgm5v23qnqVnmZN3p4TvdaokWKPjM/view) 
 
@@ -30,7 +35,36 @@ Notes:
 5. USB C Cable 
 6. Arduino IDE 
 
-## Deployment
+## Deployment Raspberry Pi
+In the home directory of the Rapsberry pi Zero W Enter the following commands:  
+
+```
+cd ~
+
+git clone https://github.com/macleod-matt/nissan-leaf-can-bms.git
+
+cd nissan-leaf-can-bms
+
+bash arduino-cli-setup.sh
+
+make 
+```
+view output on console 
+
+**Note: You may get the following error: "arduino-cli: command not found"** 
+
+If thats the case, type sudo reboot and re-enter try running the setup script again.  
+## Deployment Aretas  
+
+**After Following Above steps for Deployment on Raspberry pi** 
+1. Clone aretas CANBusMiddleweare repo 
+2. Navigate to Aretas Middleware  repo: cd CANBusMiddleware
+3. configure .cfg file with credentials (see repo)
+4. run ```python backend_daemon.py```
+5. View data percisted into cloud database 
+
+
+## Development
 
 ### **Firmware** 
 

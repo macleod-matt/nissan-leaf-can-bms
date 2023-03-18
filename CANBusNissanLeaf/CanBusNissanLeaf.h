@@ -14,7 +14,9 @@
 #define GET_CELL_INDEX(index) (index < NUM_CELLS ? index + 1 : 0 )
 #define GET_SHUNT_INDEX(index) (index < NUM_CELLS ? index + 4 : 0 )
 #define CONVERT_BYTES(high_b, low_b) ((high_b << 8 | low_b)/1000.0)
-#define DEVICE_MAC 1953659309
+#define DEVICE_MAC 303721658 
+#define SAMPLE_COUNT (100)
+
 
 /**
  * @brief Helper Macro to add voltage cell values to sensor group  data

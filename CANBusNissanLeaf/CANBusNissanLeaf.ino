@@ -158,15 +158,29 @@ void send_pack_temperatures(int sensor_request){
   
   group4_data_t * data = (group4_data_t *)sense_group4.data; 
 
-  for(int i = 0; i < NUM_TEMP_SENSORS; i++) {  // Display Temps
-      
-      serDebug->print("Temp ");
-      serDebug->print(i);
-      serDebug->print(" ");
-      serDebug->println(data->pack_temps[i]);
-
-      sendPacket(sensor_request + i, (float)data->pack_temps[i]);
+  switch(sensor_request){ 
+    case REQUEST_ALL:
+      sendPacket(EV_BAT_TEMP_1, (float)data->pack_temps[0]);
+      sendPacket(EV_BAT_TEMP_2, (float)data->pack_temps[1]);
+      sendPacket(EV_BAT_TEMP_3, (float)data->pack_temps[2]);
+      sendPacket(EV_BAT_TEMP_4, (float)data->pack_temps[3]);
+      return; //we will break in the event of a request all
+    case EV_BAT_TEMP_1: 
+      sendPacket(EV_BAT_TEMP_1, (float)data->pack_temps[0]);
+      return;
+    case EV_BAT_TEMP_2: 
+      sendPacket(EV_BAT_TEMP_2, (float)data->pack_temps[1]);
+      return; 
+    case EV_BAT_TEMP_3: 
+      sendPacket(EV_BAT_TEMP_3, (float)data->pack_temps[2]);
+      return; 
+    case EV_BAT_TEMP_4: 
+      sendPacket(EV_BAT_TEMP_4, (float)data->pack_temps[3]);
+      return; 
+    default:
+      return; //invalid request, we will return from function
   }
+
 }
 
 
@@ -497,7 +511,15 @@ void setup() {
   sense_group61.decode_func = &decode_soh;
   sense_group61.group_rec_sent = false; 
 
+  #if defined(TEST_GROUP_ALL)
+    //we need to initalize the pointer to the first group in the event of a test group all 
+    p_group_info_request = &sense_group1; 
+  #endif //defined(TEST_GROUP_ALL)
+  
   serDebug->println("Sys Ready");
+
+
+
 }
 
 
@@ -554,14 +576,20 @@ void loop() {
   static bool request_recv_flag = false; //flag to indicate group reequest recieved  
   static unsigned long CanMsgID = 0; 
   static int SensorRequest = SYS_NO_REQUEST ; 
+  static int sampleCounter = 0; 
 
   #if defined(SERIAL_COMMAND_MODE)
     get_sensor_group_from_serial(); 
     SensorRequest = SerialSensorRequest;
   #elif defined(TEST_GROUP_ALL)
-    static int groupIndex = 0; 
-    GET_SENSOR_GROUP(groupIndex,p_group_info_request); 
-    sensor_request = REQUEST_ALL; 
+    static int groupIndex = 0; //since we are already initalized to group1, we will initalize this index to 1 
+    SensorRequest = REQUEST_ALL; 
+    //we want to take a few samples before transitioning 
+    if(sampleCounter == 10000){
+      GET_SENSOR_GROUP(groupIndex,p_group_info_request); 
+      sampleCounter = 0; //reset sample counter after transitioning states 
+    }
+    sampleCounter++; // increment sample counter 
   #elif !defined(TEST_GROUP_ALL) && !defined(SERIAL_COMMAND_MODE)
     SensorRequest = REQUEST_ALL; 
     p_group_info_request = SENSE_GROUP;
@@ -582,8 +610,11 @@ void loop() {
 
   if(CanMsgID == 0x1DB && !request_recv_flag ){ 
 
-    p_group_info_request->send_func(SensorRequest); //decode data from reply 
-    request_recv_flag = true; 
+    //only send the data every 100 samples 
+    if((sampleCounter % 100) == 0){
+      p_group_info_request->send_func(SensorRequest); //decode data from reply 
+      request_recv_flag = true; 
+    }
   }
   
   if(request_recv_flag){
