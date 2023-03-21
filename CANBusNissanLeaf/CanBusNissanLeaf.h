@@ -6,7 +6,7 @@
 #define CANint (2)
 #define GROUP_REQEST_SIZE (8)
 #define NISSAN_BMS_REPLY_ID (0x7BB)
-#define CHECK_CURRENT(current) (current & 0x8000000 == 0x8000000)? ((current | ~0xFFFFFFFF) / 1024): (current/1024); 
+#define CHECK_CURRENT(current) (current & 0x8000000 == 0x8000000)? ((current |-0x100000000) / 1024): (current/1024); 
 #define LED2 8
 #define LED3 7
 #define NUM_CELLS 96
