@@ -12,7 +12,7 @@ The goal of developing this interface was to allow developers an easy way to que
 
 The Serial commands for this interface was inteded to be a plug-in for an IoT sensing module compatible with the [Aretas Iot Cloud Suite](https://www2.aretas.ca/aretas-cloud/)
 
-For simplity firmware was developed on the[Longan Labs Canbed 2040](https://docs.longan-labs.cc/1030018/) and the cloud persitance was done with a raspberry pi zero W. 
+For simplity firmware was developed on the [Longan Labs Canbed 2040](https://docs.longan-labs.cc/1030018/) and the cloud persitance was done with a raspberry pi zero W. 
 
 
 Notes:
